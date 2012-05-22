@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -528,8 +528,8 @@ static u32 vcd_init_cmn
 		config->map_dev_base_addr
 		|| dev_ctxt->config.un_map_dev_base_addr !=
 		config->un_map_dev_base_addr) {
-		VCD_MSG_ERROR("Device config mismatch");
-		VCD_MSG_HIGH("VCD will be using config from 1st vcd_init");
+		VCD_MSG_HIGH("Device config mismatch. "
+			"VCD will be using config from 1st vcd_init");
 	}
 
 	*driver_handle = 0;
@@ -920,10 +920,9 @@ static u32 vcd_set_dev_pwr_in_ready
 	switch (pwr_state) {
 	case VCD_PWR_STATE_SLEEP:
 		{
-			vcd_pause_all_sessions(dev_ctxt);
-
+			if (dev_ctxt->pwr_state == VCD_PWR_STATE_ON)
+				vcd_pause_all_sessions(dev_ctxt);
 			dev_ctxt->pwr_state = VCD_PWR_STATE_SLEEP;
-
 			break;
 		}
 

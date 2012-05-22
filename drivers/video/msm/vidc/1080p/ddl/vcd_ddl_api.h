@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -61,6 +61,10 @@
 #define DDL_I_FRAME_PROC_UNITS   (VCD_I_CUSTOM_DDL_BASE + 0x9)
 #define DDL_I_SEQHDR_PRESENT     (VCD_I_CUSTOM_DDL_BASE + 0xA)
 
+#define DDL_FRAME_VGA_SIZE     (640*480)
+#define DDL_FRAME_720P_WIDTH   1280
+#define DDL_FRAME_720P_HEIGHT  720
+
 struct vcd_property_rc_level{
 	u32 frame_level_rc;
 	u32 mb_level_rc;
@@ -69,10 +73,10 @@ struct vcd_property_frame_level_rc_params{
 	u32 reaction_coeff;
 };
 struct vcd_property_adaptive_rc_params{
-	u32 dark_region_as_flag;
-	u32 smooth_region_as_flag;
-	u32 static_region_as_flag;
-	u32 activity_region_flag;
+	u32 disable_dark_region_as_flag;
+	u32 disable_smooth_region_as_flag;
+	u32 disable_static_region_as_flag;
+	u32 disable_activity_region_flag;
 };
 struct ddl_property_dec_pic_buffers{
 	struct ddl_frame_data_tag *dec_pic_buffers;
