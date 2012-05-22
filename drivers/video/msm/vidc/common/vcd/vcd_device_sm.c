@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -42,14 +42,18 @@ void vcd_do_device_state_transition(struct vcd_drv_ctxt *drv_ctxt,
 		VCD_MSG_ERROR("Bad parameters. drv_ctxt=%p, to_state=%d",
 				  drv_ctxt, to_state);
 	}
+ 
+	if (!drv_ctxt)
+		return;
 
 	state_ctxt = &drv_ctxt->dev_state;
 
-	if (state_ctxt->state == to_state) {
-		VCD_MSG_HIGH("Device already in requested to_state=%d",
-				 to_state);
-
-		return;
+	if (state_ctxt->state) {
+		if (state_ctxt->state == to_state) {
+			VCD_MSG_HIGH("Device already in requested to_state=%d",
+					to_state);
+			return;
+		}
 	}
 
 	VCD_MSG_MED("vcd_do_device_state_transition: D%d -> D%d, for api %d",
@@ -528,8 +532,8 @@ static u32 vcd_init_cmn
 		config->map_dev_base_addr
 		|| dev_ctxt->config.un_map_dev_base_addr !=
 		config->un_map_dev_base_addr) {
-		VCD_MSG_HIGH("Device config mismatch. "
-			"VCD will be using config from 1st vcd_init");
+		VCD_MSG_ERROR("Device config mismatch");
+		VCD_MSG_HIGH("VCD will be using config from 1st vcd_init");
 	}
 
 	*driver_handle = 0;
@@ -923,6 +927,7 @@ static u32 vcd_set_dev_pwr_in_ready
 			if (dev_ctxt->pwr_state == VCD_PWR_STATE_ON)
 				vcd_pause_all_sessions(dev_ctxt);
 			dev_ctxt->pwr_state = VCD_PWR_STATE_SLEEP;
+
 			break;
 		}
 
