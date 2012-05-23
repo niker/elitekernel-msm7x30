@@ -76,8 +76,8 @@ enum vcd_command {
 };
 
 enum vcd_core_type {
-    VCD_CORE_1080P,
-    VCD_CORE_720P
+	VCD_CORE_1080P,
+	VCD_CORE_720P,
 };
 
 struct vcd_cmd_q_element {
@@ -172,7 +172,7 @@ struct vcd_clnt_status {
 	u32 int_field_cnt;
 	s64 first_ts;
 	s64 prev_ts;
-	u64 time_elapsed;
+	u32 time_elapsed;
 	struct vcd_frame_data eos_trig_ip_frm;
 	struct ddl_frame_data_tag eos_prev_op_frm;
 	u32 eos_prev_op_frm_status;
@@ -222,6 +222,7 @@ struct vcd_clnt_ctxt {
 	struct vcd_clnt_status status;
 
 	struct vcd_clnt_ctxt *next;
+	u32 meta_mode;
 };
 
 #define VCD_BUFFERPOOL_INUSE_DECREMENT(val) \

@@ -163,22 +163,18 @@ static void vid_enc_input_frame_done(struct video_client_ctx *client_ctx,
 
 	venc_msg->venc_msg_info.statuscode = vid_enc_get_status(status);
 
-	venc_msg->venc_msg_info.msgcode = VEN_MSG_INPUT_BUFFER_DONE;
-
-	switch (event) {
-	case VCD_EVT_RESP_INPUT_DONE:
-	   DBG("Send INPUT_DON message to client = %p\n",
+	if (event == VCD_EVT_RESP_INPUT_DONE) {
+		venc_msg->venc_msg_info.msgcode =
+			VEN_MSG_INPUT_BUFFER_DONE;
+		DBG("Send INPUT_DON message to client = %p\n",
 			client_ctx);
-	   break;
-	case VCD_EVT_RESP_INPUT_FLUSHED:
+	} else if (event == VCD_EVT_RESP_INPUT_FLUSHED) {
+		venc_msg->venc_msg_info.msgcode = VEN_MSG_INPUT_BUFFER_DONE;
 		DBG("Send INPUT_FLUSHED message to client = %p\n",
 			client_ctx);
-	   break;
-	default:
-		ERR("vid_enc_input_frame_done(): invalid event type: "
-			"%d\n", event);
-		venc_msg->venc_msg_info.statuscode = VEN_S_EFATAL;
-	   break;
+	} else {
+		ERR("vid_enc_input_frame_done(): invalid event type\n");
+		return;
 	}
 
 	venc_msg->venc_msg_info.buf.clientdata =
@@ -216,21 +212,17 @@ static void vid_enc_output_frame_done(struct video_client_ctx *client_ctx,
 	}
 
 	venc_msg->venc_msg_info.statuscode = vid_enc_get_status(status);
-	venc_msg->venc_msg_info.msgcode = VEN_MSG_OUTPUT_BUFFER_DONE;
 
-	switch (event) {
-	case VCD_EVT_RESP_OUTPUT_DONE:
-	   DBG("Send INPUT_DON message to client = %p\n",
-			client_ctx);
-	   break;
-	case VCD_EVT_RESP_OUTPUT_FLUSHED:
-	   DBG("Send INPUT_FLUSHED message to client = %p\n",
-		   client_ctx);
-	   break;
-	default:
-	   ERR("QVD: vid_enc_output_frame_done invalid cmd type: %d\n", event);
-	   venc_msg->venc_msg_info.statuscode = VEN_S_EFATAL;
-	   break;
+	if (event == VCD_EVT_RESP_OUTPUT_DONE)
+		venc_msg->venc_msg_info.msgcode =
+		VEN_MSG_OUTPUT_BUFFER_DONE;
+
+	else if (event == VCD_EVT_RESP_OUTPUT_FLUSHED)
+		venc_msg->venc_msg_info.msgcode =
+		VEN_MSG_OUTPUT_BUFFER_DONE;
+	else {
+		ERR("QVD: vid_enc_output_frame_done invalid cmd type\n");
+		return;
 	}
 
 	kernel_vaddr =
@@ -537,7 +529,7 @@ static int vid_enc_open(struct inode *inode, struct file *file)
 
 	client_index = vid_enc_get_empty_client_index();
 
-	if (client_index == -1) {
+	if (client_index < 0) {
 		ERR("%s() : No free clients client_index == -1\n",
 			__func__);
 		return -ENODEV;
@@ -1292,6 +1284,7 @@ static int vid_enc_ioctl(struct inode *inode, struct file *file,
 	case VEN_IOCTL_GET_SEQUENCE_HDR:
 	{
 		struct venc_seqheader seq_header, seq_header_user;
+		memset(&seq_header, 0, sizeof(struct venc_seqheader));
 		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
 			return -EFAULT;
 
@@ -1530,6 +1523,29 @@ static int vid_enc_ioctl(struct inode *inode, struct file *file,
 		if (copy_to_user(venc_msg.out,
 			&vid_enc_device_p->num_clients, sizeof(u32)))
 			return -EFAULT;
+		break;
+	}
+	case VEN_IOCTL_SET_METABUFFER_MODE:
+	{
+		u32 metabuffer_mode, vcd_status;
+		struct vcd_property_hdr vcd_property_hdr;
+		struct vcd_property_live live_mode;
+
+		if (copy_from_user(&venc_msg, arg, sizeof(venc_msg)))
+			return -EFAULT;
+		if (copy_from_user(&metabuffer_mode, venc_msg.in,
+			sizeof(metabuffer_mode)))
+			return -EFAULT;
+		vcd_property_hdr.prop_id = VCD_I_META_BUFFER_MODE;
+		vcd_property_hdr.sz =
+			sizeof(struct vcd_property_live);
+		live_mode.live = metabuffer_mode;
+		vcd_status = vcd_set_property(client_ctx->vcd_handle,
+					&vcd_property_hdr, &live_mode);
+		if (vcd_status) {
+			pr_err(" Setting metabuffer mode failed");
+			return -EIO;
+		}
 		break;
 	}
 	case VEN_IOCTL_SET_AC_PREDICTION:

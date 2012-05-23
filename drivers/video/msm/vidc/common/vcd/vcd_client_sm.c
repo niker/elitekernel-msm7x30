@@ -95,13 +95,13 @@ static u32 vcd_encode_start_in_open(struct vcd_clnt_ctxt *cctxt)
 		return VCD_ERR_ILLEGAL_OP;
 	}
 
-	if (!cctxt->in_buf_pool.entries ||
+	if ((!cctxt->meta_mode && !cctxt->in_buf_pool.entries) ||
 	    !cctxt->out_buf_pool.entries ||
-	    cctxt->in_buf_pool.validated != cctxt->in_buf_pool.count ||
+	    (!cctxt->meta_mode &&
+		 cctxt->in_buf_pool.validated != cctxt->in_buf_pool.count) ||
 	    cctxt->out_buf_pool.validated !=
 	    cctxt->out_buf_pool.count) {
 		VCD_MSG_ERROR("Buffer pool is not completely setup yet");
-
 		return VCD_ERR_BAD_STATE;
 	}
 
@@ -500,6 +500,13 @@ static u32 vcd_set_property_cmn
 	rc = ddl_set_property(cctxt->ddl_handle, prop_hdr, prop_val);
 	VCD_FAILED_RETURN(rc, "Failed: ddl_set_property");
 	switch (prop_hdr->prop_id) {
+	case VCD_I_META_BUFFER_MODE:
+		{
+			struct vcd_property_live *live =
+			    (struct vcd_property_live *)prop_val;
+			cctxt->meta_mode = live->live;
+			break;
+		}
 	case VCD_I_LIVE:
 		{
 			struct vcd_property_live *live =
@@ -702,24 +709,10 @@ static u32 vcd_fill_output_buffer_cmn
 	struct vcd_buffer_entry *buf_entry;
 	u32 result = true;
 	u32 handled = true;
-	if (!cctxt || !buffer) {
-		VCD_MSG_ERROR("%s(): Inavlid params cctxt %p buffer %p",
-					__func__, cctxt, buffer);
-		return VCD_ERR_BAD_POINTER;
-	}
+
 	VCD_MSG_LOW("vcd_fill_output_buffer_cmn in %d:",
 		    cctxt->clnt_state.state);
-	if (cctxt->status.mask & VCD_IN_RECONFIG) {
-		buffer->time_stamp = 0;
-		buffer->data_len = 0;
-		VCD_MSG_LOW("In reconfig: Return output buffer");
-		cctxt->callback(VCD_EVT_RESP_OUTPUT_DONE,
-			VCD_S_SUCCESS,
-			buffer,
-			sizeof(struct vcd_frame_data),
-			cctxt, cctxt->client_data);
-		return rc;
-	}
+
 	buf_entry = vcd_check_fill_output_buffer(cctxt, buffer);
 	if (!buf_entry)
 		return VCD_ERR_BAD_POINTER;
@@ -1565,14 +1558,18 @@ void vcd_do_client_state_transition(struct vcd_clnt_ctxt *cctxt,
 		VCD_MSG_ERROR("Bad parameters. cctxt=%p, to_state=%d",
 			      cctxt, to_state);
 	}
+ 
+	if (!cctxt)
+		return;
 
 	state_ctxt = &cctxt->clnt_state;
 
-	if (state_ctxt->state == to_state) {
-		VCD_MSG_HIGH("Client already in requested to_state=%d",
-			     to_state);
-
-		return;
+	if (state_ctxt->state) {
+		if (state_ctxt->state == to_state) {
+			VCD_MSG_HIGH("Client already in requested to_state=%d",
+					to_state);
+			return;
+		}
 	}
 
 	VCD_MSG_MED("vcd_do_client_state_transition: C%d -> C%d, for api %d",
@@ -1631,9 +1628,9 @@ static const struct vcd_clnt_state_table vcd_clnt_table_starting = {
 	 NULL,
 	 NULL,
 	 NULL,
-	 vcd_get_property_cmn,
 	 NULL,
-	 vcd_get_buffer_requirements_cmn,
+	 NULL,
+	 NULL,
 	 NULL,
 	 NULL,
 	 NULL,
@@ -1680,10 +1677,10 @@ static const struct vcd_clnt_state_table vcd_clnt_table_flushing = {
 	 NULL,
 	 vcd_flush_in_flushing,
 	 NULL,
-	 vcd_set_property_cmn,
-	 vcd_get_property_cmn,
 	 NULL,
-	 vcd_get_buffer_requirements_cmn,
+	 NULL,
+	 NULL,
+	 NULL,
 	 NULL,
 	 NULL,
 	 NULL,

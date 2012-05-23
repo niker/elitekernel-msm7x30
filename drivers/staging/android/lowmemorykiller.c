@@ -35,8 +35,6 @@
 #include <linux/oom.h>
 #include <linux/sched.h>
 #include <linux/notifier.h>
-#include <linux/memory.h>
-#include <linux/memory_hotplug.h>
 
 static uint32_t lowmem_debug_level = 2;
 static int lowmem_adj[6] = {
@@ -54,7 +52,6 @@ static size_t lowmem_minfree[6] = {
 };
 static int lowmem_minfree_size = 4;
 
-static unsigned int offlining;
 static struct task_struct *lowmem_deathpending;
 static unsigned long lowmem_deathpending_timeout;
 
@@ -82,31 +79,7 @@ task_notify_func(struct notifier_block *self, unsigned long val, void *data)
 	return NOTIFY_OK;
 }
 
-#ifdef CONFIG_MEMORY_HOTPLUG
-static int lmk_hotplug_callback(struct notifier_block *self,
-				unsigned long cmd, void *data)
-{
-	switch (cmd) {
-	/* Don't care LMK cases */
-	case MEM_ONLINE:
-	case MEM_OFFLINE:
-	case MEM_CANCEL_ONLINE:
-	case MEM_CANCEL_OFFLINE:
-	case MEM_GOING_ONLINE:
-		offlining = 0;
-		lowmem_print(4, "lmk in normal mode\n");
-		break;
-	/* LMK should account for movable zone */
-	case MEM_GOING_OFFLINE:
-		offlining = 1;
-		lowmem_print(4, "lmk in hotplug mode\n");
-		break;
-	}
-	return NOTIFY_DONE;
-}
-#endif
-
-static int lowmem_shrink(struct shrinker *s, int nr_to_scan, gfp_t gfp_mask)
+static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 {
 	struct task_struct *p;
 	struct task_struct *selected = NULL;
@@ -120,20 +93,7 @@ static int lowmem_shrink(struct shrinker *s, int nr_to_scan, gfp_t gfp_mask)
 	int other_free = global_page_state(NR_FREE_PAGES);
 	int other_file = global_page_state(NR_FILE_PAGES) -
 						global_page_state(NR_SHMEM);
-	struct zone *zone;
 
-	if (offlining) {
-		/* Discount all free space in the section being offlined */
-		for_each_zone(zone) {
-			 if (zone_idx(zone) == ZONE_MOVABLE) {
-				other_free -= zone_page_state(zone,
-						NR_FREE_PAGES);
-				lowmem_print(4, "lowmem_shrink discounted "
-					"%lu pages in movable zone\n",
-					zone_page_state(zone, NR_FREE_PAGES));
-			}
-		}
-	}
 	/*
 	 * If we already have a death outstanding, then
 	 * bail out right away; indicating to vmscan
@@ -156,17 +116,17 @@ static int lowmem_shrink(struct shrinker *s, int nr_to_scan, gfp_t gfp_mask)
 			break;
 		}
 	}
-	if (nr_to_scan > 0)
-		lowmem_print(3, "lowmem_shrink %d, %x, ofree %d %d, ma %d\n",
-			     nr_to_scan, gfp_mask, other_free, other_file,
+	if (sc->nr_to_scan > 0)
+		lowmem_print(3, "lowmem_shrink %lu, %x, ofree %d %d, ma %d\n",
+			     sc->nr_to_scan, sc->gfp_mask, other_free, other_file,
 			     min_adj);
 	rem = global_page_state(NR_ACTIVE_ANON) +
 		global_page_state(NR_ACTIVE_FILE) +
 		global_page_state(NR_INACTIVE_ANON) +
 		global_page_state(NR_INACTIVE_FILE);
-	if (nr_to_scan <= 0 || min_adj == OOM_ADJUST_MAX + 1) {
-		lowmem_print(5, "lowmem_shrink %d, %x, return %d\n",
-			     nr_to_scan, gfp_mask, rem);
+	if (sc->nr_to_scan <= 0 || min_adj == OOM_ADJUST_MAX + 1) {
+		lowmem_print(5, "lowmem_shrink %lu, %x, return %d\n",
+			     sc->nr_to_scan, sc->gfp_mask, rem);
 		return rem;
 	}
 	selected_oom_adj = min_adj;
@@ -215,8 +175,8 @@ static int lowmem_shrink(struct shrinker *s, int nr_to_scan, gfp_t gfp_mask)
 		force_sig(SIGKILL, selected);
 		rem -= selected_tasksize;
 	}
-	lowmem_print(4, "lowmem_shrink %d, %x, return %d\n",
-		     nr_to_scan, gfp_mask, rem);
+	lowmem_print(4, "lowmem_shrink %lu, %x, return %d\n",
+		     sc->nr_to_scan, sc->gfp_mask, rem);
 	read_unlock(&tasklist_lock);
 	return rem;
 }
@@ -230,9 +190,6 @@ static int __init lowmem_init(void)
 {
 	task_free_register(&task_nb);
 	register_shrinker(&lowmem_shrinker);
-#ifdef CONFIG_MEMORY_HOTPLUG
-	hotplug_memory_notifier(lmk_hotplug_callback, 0);
-#endif
 	return 0;
 }
 
@@ -253,4 +210,5 @@ module_init(lowmem_init);
 module_exit(lowmem_exit);
 
 MODULE_LICENSE("GPL");
+
 

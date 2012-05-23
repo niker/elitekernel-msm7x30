@@ -141,7 +141,7 @@ static int rpc_clients_thread(void *data)
 	client = data;
 	for (;;) {
 		buffer = NULL;
-               rc = msm_rpc_read(client->ept, &buffer, -1, -1);
+		rc = msm_rpc_read(client->ept, &buffer, -1, HZ);
 
 		if (client->exit_flag) {
 			kfree(buffer);
@@ -236,7 +236,7 @@ static struct msm_rpc_client *msm_rpc_create_client(void)
 	client->cb_avail = 0;
 	init_waitqueue_head(&client->cb_wait);
 	INIT_LIST_HEAD(&client->cb_list);
-	mutex_init(&client->cb_list_lock);
+	spin_lock_init(&client->cb_list_lock);
 	atomic_set(&client->next_cb_id, 1);
 
 	return client;
@@ -253,14 +253,15 @@ static void msm_rpc_destroy_client(struct msm_rpc_client *client)
 void msm_rpc_remove_all_cb_func(struct msm_rpc_client *client)
 {
 	struct msm_rpc_cb_table_item *cb_item, *tmp_cb_item;
+	unsigned long flags;
 
-	mutex_lock(&client->cb_list_lock);
+	spin_lock_irqsave(&client->cb_list_lock, flags);
 	list_for_each_entry_safe(cb_item, tmp_cb_item,
 				 &client->cb_list, list) {
 		list_del(&cb_item->list);
 		kfree(cb_item);
 	}
-	mutex_unlock(&client->cb_list_lock);
+	spin_unlock_irqrestore(&client->cb_list_lock, flags);
 }
 
 /*
@@ -331,7 +332,6 @@ struct msm_rpc_client *msm_rpc_register_client(
 	if (IS_ERR(client->cb_thread)) {
 		rc = PTR_ERR(client->cb_thread);
 		client->exit_flag = 1;
-               msm_rpc_read_wakeup(client->ept);
 		wait_for_completion(&client->complete);
 		msm_rpc_close(client->ept);
 		msm_rpc_destroy_client(client);
@@ -411,7 +411,6 @@ struct msm_rpc_client *msm_rpc_register_client2(
 	if (IS_ERR(client->cb_thread)) {
 		rc = PTR_ERR(client->cb_thread);
 		client->exit_flag = 1;
-               msm_rpc_read_wakeup(client->ept);
 		wait_for_completion(&client->complete);
 		msm_rpc_close(client->ept);
 		msm_rpc_destroy_client(client);
@@ -442,7 +441,6 @@ int msm_rpc_unregister_client(struct msm_rpc_client *client)
 		wait_for_completion(&client->cb_complete);
 	}
 
-       msm_rpc_read_wakeup(client->ept);
 	wait_for_completion(&client->complete);
 
 	msm_rpc_close(client->ept);
@@ -758,18 +756,19 @@ EXPORT_SYMBOL(msm_rpc_send_accepted_reply);
 int msm_rpc_add_cb_func(struct msm_rpc_client *client, void *cb_func)
 {
 	struct msm_rpc_cb_table_item *cb_item;
+	unsigned long flags;
 
 	if (cb_func == NULL)
 		return MSM_RPC_CLIENT_NULL_CB_ID;
 
-	mutex_lock(&client->cb_list_lock);
+	spin_lock_irqsave(&client->cb_list_lock, flags);
 	list_for_each_entry(cb_item, &client->cb_list, list) {
 		if (cb_item->cb_func == cb_func) {
-			mutex_unlock(&client->cb_list_lock);
+			spin_unlock_irqrestore(&client->cb_list_lock, flags);
 			return cb_item->cb_id;
 		}
 	}
-	mutex_unlock(&client->cb_list_lock);
+	spin_unlock_irqrestore(&client->cb_list_lock, flags);
 
 	cb_item = kmalloc(sizeof(struct msm_rpc_cb_table_item), GFP_KERNEL);
 	if (!cb_item)
@@ -779,9 +778,9 @@ int msm_rpc_add_cb_func(struct msm_rpc_client *client, void *cb_func)
 	cb_item->cb_id = atomic_add_return(1, &client->next_cb_id);
 	cb_item->cb_func = cb_func;
 
-	mutex_lock(&client->cb_list_lock);
+	spin_lock_irqsave(&client->cb_list_lock, flags);
 	list_add_tail(&cb_item->list, &client->cb_list);
-	mutex_unlock(&client->cb_list_lock);
+	spin_unlock_irqrestore(&client->cb_list_lock, flags);
 
 	return cb_item->cb_id;
 }
@@ -802,15 +801,16 @@ EXPORT_SYMBOL(msm_rpc_add_cb_func);
 void *msm_rpc_get_cb_func(struct msm_rpc_client *client, uint32_t cb_id)
 {
 	struct msm_rpc_cb_table_item *cb_item;
+	unsigned long flags;
 
-	mutex_lock(&client->cb_list_lock);
+	spin_lock_irqsave(&client->cb_list_lock, flags);
 	list_for_each_entry(cb_item, &client->cb_list, list) {
 		if (cb_item->cb_id == cb_id) {
-			mutex_unlock(&client->cb_list_lock);
+			spin_unlock_irqrestore(&client->cb_list_lock, flags);
 			return cb_item->cb_func;
 		}
 	}
-	mutex_unlock(&client->cb_list_lock);
+	spin_unlock_irqrestore(&client->cb_list_lock, flags);
 	return NULL;
 }
 EXPORT_SYMBOL(msm_rpc_get_cb_func);
@@ -826,20 +826,21 @@ EXPORT_SYMBOL(msm_rpc_get_cb_func);
 void msm_rpc_remove_cb_func(struct msm_rpc_client *client, void *cb_func)
 {
 	struct msm_rpc_cb_table_item *cb_item, *tmp_cb_item;
+	unsigned long flags;
 
 	if (cb_func == NULL)
 		return;
 
-	mutex_lock(&client->cb_list_lock);
+	spin_lock_irqsave(&client->cb_list_lock, flags);
 	list_for_each_entry_safe(cb_item, tmp_cb_item,
 				 &client->cb_list, list) {
 		if (cb_item->cb_func == cb_func) {
 			list_del(&cb_item->list);
 			kfree(cb_item);
-			mutex_unlock(&client->cb_list_lock);
+			spin_unlock_irqrestore(&client->cb_list_lock, flags);
 			return;
 		}
 	}
-	mutex_unlock(&client->cb_list_lock);
+	spin_unlock_irqrestore(&client->cb_list_lock, flags);
 }
 EXPORT_SYMBOL(msm_rpc_remove_cb_func);
