@@ -87,8 +87,6 @@ config CRC32_SLICEBY8
 	  Most modern processors have enough cache that this shouldn't be
 	  a problem.
 
-	  If you don't know which to choose, choose this one.
-
 config CRC32_SLICEBY4
 	bool "Slice by 4 bytes"
 	help
