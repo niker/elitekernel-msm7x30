@@ -23,48 +23,6 @@ config CONSTRUCTORS
 
 menu "General setup"
 
-config SCHED_BFS
-	bool "BFS cpu scheduler"
-	---help---
-	  The Brain Fuck CPU Scheduler for excellent interactivity and
-	  responsiveness on the desktop and solid scalability on normal
-          hardware. Not recommended for 4096 CPUs.
-
-	  Currently incompatible with the Group CPU scheduler, and RCU TORTURE
-          TEST so these options are disabled.
-
-          Say Y here.
-	default y
-
-config SCHED_BFS_CUSTOM_RR
-	bool "Custom rr_interval for BFS"
-	depends on SCHED_BFS
-	default n
-	help
-	  Selecting this option will allow you to change the default value
-	  for rr_interval within the bfs scheduler.
-
-	  The default rr_interval is 6ms
-	  If unsure, say N.
-
-config SCHED_BFS_RR_INTERVAL
-	int "rr_interval value in ms"
-	depends on SCHED_BFS_CUSTOM_RR
-	range 1 5000
-	default 6
-	help
-	  This is the smallest duration that any cpu process scheduling unit
-	  will run for. Increasing this value can increase throughput of cpu
-	  bound tasks substantially but at the expense of increased latencies
-	  overall. Conversely decreasing it will decrease average and maximum
-	  latencies but at the expense of throughput. This value is in
-	  milliseconds and the default value chosen depends on the number of
-	  cpus available at scheduler initialisation with a minimum of 6.
-
-	  Valid values are from 1-5000.
-	  Default is 6ms
-	  3ms is recommended for a very interactive, responsive desktop
-
 config EXPERIMENTAL
 	bool "Prompt for development and/or incomplete code/drivers"
 	---help---
@@ -165,16 +123,13 @@ config HAVE_KERNEL_BZIP2
 config HAVE_KERNEL_LZMA
 	bool
 
-config HAVE_KERNEL_XZ
-	bool
-
 config HAVE_KERNEL_LZO
 	bool
 
 choice
 	prompt "Kernel compression mode"
 	default KERNEL_GZIP
-	depends on HAVE_KERNEL_GZIP || HAVE_KERNEL_BZIP2 || HAVE_KERNEL_LZMA || HAVE_KERNEL_XZ || HAVE_KERNEL_LZO
+	depends on HAVE_KERNEL_GZIP || HAVE_KERNEL_BZIP2 || HAVE_KERNEL_LZMA || HAVE_KERNEL_LZO
 	help
 	  The linux kernel is a kind of self-extracting executable.
 	  Several compression algorithms are available, which differ
@@ -218,21 +173,6 @@ config KERNEL_LZMA
 	  Its ratio is best, decompression speed is between the other
 	  two. Compression is slowest.	The kernel size is about 33%
 	  smaller with LZMA in comparison to gzip.
-
-config KERNEL_XZ
-	bool "XZ"
-	depends on HAVE_KERNEL_XZ
-	help
-	  XZ uses the LZMA2 algorithm and instruction set specific
-	  BCJ filters which can improve compression ratio of executable
-	  code. The size of the kernel is about 30% smaller with XZ in
-	  comparison to gzip. On architectures for which there is a BCJ
-	  filter (i386, x86_64, ARM, IA-64, PowerPC, and SPARC), XZ
-	  will create a few percent smaller kernel than plain LZMA.
-
-	  The speed is about the same as with LZMA: The decompression
-	  speed of XZ is better than that of bzip2 but worse than gzip
-	  and LZO. Compression is slow.
 
 config KERNEL_LZO
 	bool "LZO"
@@ -660,7 +600,7 @@ config PROC_PID_CPUSET
 
 config CGROUP_CPUACCT
 	bool "Simple CPU accounting cgroup subsystem"
-	depends on CGROUPS && !SCHED_BFS
+	depends on CGROUPS
 	help
 	  Provides a simple Resource Controller for monitoring the
 	  total CPU consumed by the tasks in a cgroup.
@@ -715,7 +655,7 @@ config CGROUP_MEM_RES_CTLR_SWAP
 
 menuconfig CGROUP_SCHED
 	bool "Group CPU scheduler"
-	depends on EXPERIMENTAL && CGROUPS && !SCHED_BFS
+	depends on EXPERIMENTAL && CGROUPS
 	default n
 	help
 	  This feature lets CPU scheduler recognize task groups and control CPU
@@ -770,19 +710,6 @@ config DEBUG_BLK_CGROUP
 	files in a cgroup which can be useful for debugging.
 
 endif # CGROUPS
-
-config SCHED_AUTOGROUP
-	bool "Automatic process group scheduling"
-	select EVENTFD
-	select CGROUPS
-	select CGROUP_SCHED
-	select FAIR_GROUP_SCHED
-	help
-	  This option optimizes the scheduler for common desktop workloads by
-	  automatically creating and populating task groups.  This separation
-	  of workloads isolates aggressive CPU burners (like build jobs) from
-	  desktop applications.  Task group autogeneration is currently based
-	  upon task session.
 
 config MM_OWNER
 	bool
