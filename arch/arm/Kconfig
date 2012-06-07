@@ -25,6 +25,7 @@ config ARM
 	select HAVE_KERNEL_XZ
 	select HAVE_PERF_EVENTS
 	select PERF_USE_VMALLOC
+	select HAVE_REGS_AND_STACK_ACCESS_API
 	help
 	  The ARM series is a line of low-power-consumption RISC chip designs
 	  licensed by ARM Ltd and targeted at embedded applications and
@@ -37,6 +38,9 @@ config HAVE_PWM
 	bool
 
 config SYS_SUPPORTS_APM_EMULATION
+	bool
+
+config HAVE_SCHED_CLOCK
 	bool
 
 config GENERIC_GPIO
@@ -128,6 +132,15 @@ config GENERIC_LOCKBREAK
 	default y
 	depends on SMP && PREEMPT
 
+config ARM_TICKET_LOCKS
+	bool
+	help
+	  Enable ticket locks, which help preserve fairness among
+	  contended locks and prevent livelock in multicore systems.
+	  Say 'y' if system stability is important.
+	default y if ARCH_MSM_SCORPIONMP
+	depends on SMP
+
 config RWSEM_GENERIC_SPINLOCK
 	bool
 
@@ -148,7 +161,7 @@ config ARCH_HAS_CPUFREQ
 	  it.
 
 config ARCH_HAS_CPU_IDLE_WAIT
-	bool
+	def_bool y
 
 config GENERIC_HWEIGHT
 	bool

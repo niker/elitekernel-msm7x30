@@ -46,14 +46,11 @@ ENTRY(cpu_v7_proc_init)
 ENDPROC(cpu_v7_proc_init)
 
 ENTRY(cpu_v7_proc_fin)
-	stmfd	sp!, {lr}
-	cpsid	if				@ disable interrupts
-	bl	v7_flush_kern_cache_all
 	mrc	p15, 0, r0, c1, c0, 0		@ ctrl register
 	bic	r0, r0, #0x1000			@ ...i............
 	bic	r0, r0, #0x0006			@ .............ca.
 	mcr	p15, 0, r0, c1, c0, 0		@ disable caches
-	ldmfd	sp!, {pc}
+	mov	pc, lr
 ENDPROC(cpu_v7_proc_fin)
 
 /*
@@ -67,7 +64,14 @@ ENDPROC(cpu_v7_proc_fin)
  */
 	.align	5
 ENTRY(cpu_v7_reset)
-	mov	pc, r0
+	mrc     p15, 0, r1, c1, c0, 0           @ ctrl register
+	bic     r1, r1, #0x0001                 @ ...............m
+        mcr     p15, 0, r1, c1, c0, 0           @ Turn off MMU
+        mcr     p15, 0, ip, c8, c7, 0           @ invalidate I & D,flush TLB
+        mcr     p15, 0, ip, c7, c5, 6           @ flush BTC
+        dsb
+        isb
+	mov     pc,r0
 ENDPROC(cpu_v7_reset)
 
 /*
@@ -186,6 +190,10 @@ cpu_v7_name:
  *	Initialise TLB, Caches, and MMU state ready to switch the MMU
  *	on.  Return in r0 the new CP15 C1 control register setting.
  *
+ *	We automatically detect if we have a Harvard cache, and use the
+ *	Harvard cache control instructions insead of the unified cache
+ *	control instructions.
+ *
  *	This should be able to cover all ARMv7 cores.
  *
  *	It is assumed that:
@@ -233,7 +241,9 @@ __v7_setup:
 #endif
 
 2:	mov	r10, #0
+#ifdef HARVARD_CACHE
 	mcr	p15, 0, r10, c7, c5, 0		@ I+BTB cache invalidate
+#endif
 	dsb
 #ifdef CONFIG_MMU
 	mcr	p15, 0, r10, c8, c7, 0		@ invalidate I + D TLBs
