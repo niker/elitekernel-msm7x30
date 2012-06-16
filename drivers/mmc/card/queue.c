@@ -24,7 +24,7 @@
 
 #include <mach/msm_sdcc.h>
 
-#define MMC_QUEUE_BOUNCESZ	65536
+#define MMC_QUEUE_BOUNCESZ	98304
 
 #define MMC_QUEUE_SUSPENDED	(1 << 0)
 

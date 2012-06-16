@@ -16,6 +16,18 @@
 #include <linux/notifier.h>
 #include <linux/power_supply.h>
 
+#define BATT_EVENT_SUSPEND	0x01
+
+#define ENABLE_LIMITED_CHG      0x10
+#define CLEAR_LIMITED_CHG       0x11
+#define CHECK_CHG		0X64
+#define SET_ICL500		0X65
+#define SET_ICL100		0X66
+#define CHECK_INT2		0X67
+#define OVERTEMP_VREG_4060	0XC8
+#define NORMALTEMP_VREG_4200	0XC9
+#define CHECK_INT1		0XCA
+#define CHECK_CONTROL           0xCB
 /* information about the system we're running on */
 extern unsigned int system_rev;
 
@@ -82,6 +94,7 @@ struct battery_info_reply {
 	u32 full_bat;		/* Full capacity of battery (mAh) */
 	u32 full_level;		/* Full Level */
 	u32 over_vchg;		/* 0:normal, 1:over voltage charger */
+	u32 force_high_power_charging;
 	s32 eval_current;	/* System loading current from ADC */
 };
 
