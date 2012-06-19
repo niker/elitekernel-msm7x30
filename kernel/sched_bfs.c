@@ -130,7 +130,7 @@
 #ifdef CONFIG_SCHED_BFS_CUSTOM_RR
 int rr_interval __read_mostly = CONFIG_SCHED_BFS_RR_INTERVAL;
 #else
-int rr_interval __read_mostly = 15;
+int rr_interval __read_mostly = 6;
 #endif
 
 /*
@@ -138,16 +138,16 @@ int rr_interval __read_mostly = 15;
  * are allowed to run five seconds as real time tasks. This is the total over
  * all online cpus.
  */
-int sched_iso_cpu __read_mostly = 55;
+int sched_iso_cpu __read_mostly = 75;
 
 /*
  * group_thread_accounting - sysctl to decide whether to treat whole thread
  * groups as a single entity for the purposes of CPU distribution.
  */
-int group_thread_accounting __read_mostly = 0;
+int group_thread_accounting __read_mostly = 1;
 
 /* fork_depth_penalty - Whether to penalise CPU according to fork depth. */
-int fork_depth_penalty __read_mostly = 0;
+int fork_depth_penalty __read_mostly = 1;
 
 /*
  * The relative length of deadline for each priority(nice) level.
