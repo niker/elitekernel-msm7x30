@@ -8,7 +8,7 @@
 #endif
 
 #ifndef HZ
-#define HZ 240
+#define HZ 100
 #endif
 
 #ifndef EXEC_PAGESIZE

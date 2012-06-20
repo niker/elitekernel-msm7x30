@@ -1,28 +1,32 @@
 # delete everything
-rm -fR ./a_compiled_out/system/lib/modules/*
-rm -fR ./a_compiled_out/kernel/*
+rm -fR ../a_compiled_out
+mkdir ../a_compiled_out
+mkdir ../a_compiled_out/kernel
+mkdir ../a_compiled_out/system
+mkdir ../a_compiled_out/system/lib
+mkdir ../a_compiled_out/system/lib/modules
 make clean
 
 # make
 make -j6
 
 # copy modules
-cp -f ./crypto/lzo.ko ./a_compiled_out/system/lib/modules/
-cp -f ./crypto/zlib.ko ./a_compiled_out/system/lib/modules/
-cp -f ./drivers/hid/usbhid/usbhid.ko ./a_compiled_out/system/lib/modules/
-cp -f ./drivers/hid/usbhid/usbkbd.ko ./a_compiled_out/system/lib/modules/
-cp -f ./drivers/net/wireless/bcm4329/bcm4329.ko ./a_compiled_out/system/lib/modules/
-cp -f ./drivers/usb/core/usbcore.ko ./a_compiled_out/system/lib/modules/
-cp -f ./drivers/usb/mon/usbmon.ko ./a_compiled_out/system/lib/modules/
-cp -f ./fs/cachefiles/cachefiles.ko ./a_compiled_out/system/lib/modules/
-cp -f ./fs/fscache/fscache.ko ./a_compiled_out/system/lib/modules/
-cp -f ./fs/cifs/cifs.ko ./a_compiled_out/system/lib/modules/
-cp -f ./fs/fuse/fuse.ko ./a_compiled_out/system/lib/modules/
-cp -f ./fs/ntfs/ntfs.ko ./a_compiled_out/system/lib/modules/
+cp -f ./crypto/lzo.ko ../a_compiled_out/system/lib/modules/
+cp -f ./crypto/zlib.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/hid/usbhid/usbhid.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/hid/usbhid/usbkbd.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/net/wireless/bcm4329/bcm4329.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/usb/core/usbcore.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/usb/mon/usbmon.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/cachefiles/cachefiles.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/fscache/fscache.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/cifs/cifs.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/fuse/fuse.ko ../a_compiled_out/system/lib/modules/
+cp -f ./fs/ntfs/ntfs.ko ../a_compiled_out/system/lib/modules/
 
 # copy zImage
-cp -f ./arch/arm/boot/zImage ./a_compiled_out/kernel/
+cp -f ./arch/arm/boot/zImage ../a_compiled_out/kernel/
 
 # ready for further editing
-#make clean
+make clean
 
