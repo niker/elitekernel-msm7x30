@@ -26,11 +26,11 @@
  * It helps to keep variable names smaller, simpler
  */
 
-#define DEF_FREQUENCY_UP_THRESHOLD		(94)
-#define DEF_FREQUENCY_DOWN_THRESHOLD		(66)
+#define DEF_FREQUENCY_UP_THRESHOLD		(95)
+#define DEF_FREQUENCY_DOWN_THRESHOLD		(15)
 #define DEFAULT_SLEEP_MAX_FREQ 768000
-#define DEFAULT_SLEEP_MIN_FREQ 245760
-#define DEFAULT_SLEEP_PREV_FREQ 245760 //This is so that if there are any issues resulting in sleep_prev_freq getting set, there will be a backup freq
+#define DEFAULT_SLEEP_MIN_FREQ 122880
+#define DEFAULT_SLEEP_PREV_FREQ 768000 //This is so that if there are any issues resulting in sleep_prev_freq getting set, there will be a backup freq
 #define DEFAULT_PREV_MAX 768000
 static unsigned int suspended;
 static unsigned int sleep_max_freq=DEFAULT_SLEEP_MAX_FREQ;
@@ -52,11 +52,11 @@ static unsigned int sleep_prev_max=DEFAULT_PREV_MAX;
 
 static unsigned int min_sampling_rate;
 
-#define LATENCY_MULTIPLIER			(1000)
-#define MIN_LATENCY_MULTIPLIER			(100)
+#define LATENCY_MULTIPLIER			(12)
+#define MIN_LATENCY_MULTIPLIER			(8)
 #define DEF_SAMPLING_DOWN_FACTOR		(1)
-#define MAX_SAMPLING_DOWN_FACTOR		(10)
-#define TRANSITION_LATENCY_LIMIT		(10 * 1000 * 1000)
+#define MAX_SAMPLING_DOWN_FACTOR		(4)
+#define TRANSITION_LATENCY_LIMIT		(10 * 100 * 100)
 
 
 static void do_dbs_timer(struct work_struct *work);
