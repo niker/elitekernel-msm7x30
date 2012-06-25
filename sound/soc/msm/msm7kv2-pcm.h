@@ -31,13 +31,13 @@
 #include <mach/qdsp5v2/audpreproc.h>
 
 
-#define FRAME_NUM               (8)
+#define FRAME_NUM               (16)
 #define FRAME_SIZE              (2052 * 2)
 #define MONO_DATA_SIZE          (2048)
 #define STEREO_DATA_SIZE        (MONO_DATA_SIZE * 2)
 #define CAPTURE_DMASZ           (FRAME_SIZE * FRAME_NUM)
 
-#define BUFSZ			(960 * 5)
+#define BUFSZ			(1920 * 5)
 #define PLAYBACK_DMASZ 		(BUFSZ * 2)
 
 #define MSM_PLAYBACK_DEFAULT_VOLUME 0 /* 0dB */
@@ -55,7 +55,7 @@
 				PLAYBACK_DMASZ
 /* 2048 frames (Mono), 1024 frames (Stereo) */
 #define CAPTURE_SIZE		4096
-#define MAX_BUFFER_CAPTURE_SIZE (4096*4)
+#define MAX_BUFFER_CAPTURE_SIZE (6144*4)
 #define MAX_PERIOD_SIZE         BUFSZ
 #define USE_PERIODS_MAX         1024
 #define USE_PERIODS_MIN		1

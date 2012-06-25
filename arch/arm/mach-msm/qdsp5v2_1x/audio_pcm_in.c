@@ -37,7 +37,7 @@
 #include <linux/rtc.h>
 
 /* FRAME_NUM must be a power of two */
-#define FRAME_NUM		(8)
+#define FRAME_NUM		(16)
 #define FRAME_SIZE		(2052 * 2)
 #define MONO_DATA_SIZE		(2048)
 #define STEREO_DATA_SIZE	(MONO_DATA_SIZE * 2)
