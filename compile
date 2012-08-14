@@ -23,6 +23,9 @@ cp -f ./fs/fscache/fscache.ko ../a_compiled_out/system/lib/modules/
 cp -f ./fs/cifs/cifs.ko ../a_compiled_out/system/lib/modules/
 cp -f ./fs/fuse/fuse.ko ../a_compiled_out/system/lib/modules/
 cp -f ./fs/ntfs/ntfs.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/md/dm-crypt.ko ../a_compiled_out/system/lib/modules/
+cp -f ./drivers/staging/zram/zram.ko ../a_compiled_out/system/lib/modules/
+
 
 # copy zImage
 cp -f ./arch/arm/boot/zImage ../a_compiled_out/kernel/

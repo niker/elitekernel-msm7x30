@@ -118,6 +118,8 @@ struct kgsl_memdesc_ops {
 	int (*map_kernel_mem)(struct kgsl_memdesc *);
 };
 
+#define KGSL_MEMDESC_GUARD_PAGE BIT(0)
+
 /* shared memory allocation */
 struct kgsl_memdesc {
 	struct kgsl_pagetable *pagetable;
@@ -129,6 +131,7 @@ struct kgsl_memdesc {
 	struct scatterlist *sg;
 	unsigned int sglen;
 	struct kgsl_memdesc_ops *ops;
+	int flags;
 };
 
 /* List of different memory entry types */
@@ -195,6 +198,16 @@ static inline int kgsl_gpuaddr_in_memdesc(const struct kgsl_memdesc *memdesc,
 	}
 	return 0;
 }
+
+static inline void *kgsl_memdesc_map(struct kgsl_memdesc *memdesc)
+{
+	if (memdesc->hostptr == NULL && memdesc->ops &&
+		memdesc->ops->map_kernel_mem)
+		memdesc->ops->map_kernel_mem(memdesc);
+
+	return memdesc->hostptr;
+}
+
 static inline uint8_t *kgsl_gpuaddr_to_vaddr(struct kgsl_memdesc *memdesc,
 					     unsigned int gpuaddr)
 {

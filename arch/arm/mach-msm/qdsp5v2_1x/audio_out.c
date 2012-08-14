@@ -42,7 +42,7 @@
 #include <mach/htc_pwrsink.h>
 #include <linux/rtc.h>
 
-#define BUFSZ (960 * 5)
+#define BUFSZ (1920 * 5)
 #define DMASZ (BUFSZ * 2)
 
 #define HOSTPCM_STREAM_ID 5

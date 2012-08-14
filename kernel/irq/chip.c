@@ -402,6 +402,8 @@ void handle_nested_irq(unsigned int irq)
 	action = desc->action;
 	if (unlikely(!action || (desc->status & IRQ_DISABLED))) {
 		mask_this_irq = 1;
+		if (!(desc->status & IRQ_LEVEL))
+			desc->status |= IRQ_PENDING;
 		goto out_unlock;
 	}
 
@@ -422,11 +424,6 @@ out_unlock:
 		chip_bus_sync_unlock(irq, desc);
 	}
 	raw_spin_unlock_irq(&desc->lock);
-	if (unlikely(mask_this_irq)) {
-		chip_bus_lock(irq, desc);
-		mask_irq(desc, irq);
-		chip_bus_sync_unlock(irq, desc);
-	}
 }
 EXPORT_SYMBOL_GPL(handle_nested_irq);
 

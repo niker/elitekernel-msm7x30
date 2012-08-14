@@ -16,18 +16,6 @@
 #include <linux/notifier.h>
 #include <linux/power_supply.h>
 
-#define BATT_EVENT_SUSPEND	0x01
-
-#define ENABLE_LIMITED_CHG      0x10
-#define CLEAR_LIMITED_CHG       0x11
-#define CHECK_CHG		0X64
-#define SET_ICL500		0X65
-#define SET_ICL100		0X66
-#define CHECK_INT2		0X67
-#define OVERTEMP_VREG_4060	0XC8
-#define NORMALTEMP_VREG_4200	0XC9
-#define CHECK_INT1		0XCA
-#define CHECK_CONTROL           0xCB
 /* information about the system we're running on */
 extern unsigned int system_rev;
 
@@ -36,7 +24,6 @@ enum batt_ctl_t {
 	ENABLE_SLOW_CHG,
 	ENABLE_FAST_CHG,
 	ENABLE_SUPER_CHG,
-    ENABLE_WIRELESS_CHG,
 	CHARGER_CHK,
 	TOGGLE_CHARGER,
 	ENABLE_MIN_TAPER,
@@ -51,15 +38,7 @@ enum charger_type_t {
 	CHARGER_BATTERY = 0,
 	CHARGER_USB,
 	CHARGER_AC,
-	CHARGER_SUPER_AC,
-	CHARGER_WIRELESS
-};
-
-enum power_supplies_type {
-	BATTERY_SUPPLY,
-	USB_SUPPLY,
-	AC_SUPPLY,
-	WIRELESS_SUPPLY
+	CHARGER_SUPER_AC
 };
 
 enum charger_control_flag {
@@ -94,7 +73,6 @@ struct battery_info_reply {
 	u32 full_bat;		/* Full capacity of battery (mAh) */
 	u32 full_level;		/* Full Level */
 	u32 over_vchg;		/* 0:normal, 1:over voltage charger */
-	u32 force_high_power_charging;
 	s32 eval_current;	/* System loading current from ADC */
 };
 
@@ -127,12 +105,6 @@ extern int unregister_notifier_cable_status(struct notifier_block *nb);
 #else
 static int register_notifier_cable_status(struct notifier_block *nb) { return 0; }
 static int unregister_notifier_cable_status(struct notifier_block *nb) { return 0; }
-#endif
-
-#ifdef CONFIG_WIRELESS_CHARGER
-extern int register_notifier_wireless_charger(struct notifier_block *nb);
-extern int unregister_notifier_wireless_charger(struct notifier_block *nb);
-extern int htc_is_wireless_charger(void);
 #endif
 
 #if defined(CONFIG_BATTERY_DS2784)

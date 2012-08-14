@@ -138,13 +138,13 @@ int rr_interval __read_mostly = 6;
  * are allowed to run five seconds as real time tasks. This is the total over
  * all online cpus.
  */
-int sched_iso_cpu __read_mostly = 20;
+int sched_iso_cpu __read_mostly = 60;
 
 /*
  * group_thread_accounting - sysctl to decide whether to treat whole thread
  * groups as a single entity for the purposes of CPU distribution.
  */
-int group_thread_accounting __read_mostly = 1;
+int group_thread_accounting __read_mostly = 0;
 
 /* fork_depth_penalty - Whether to penalise CPU according to fork depth. */
 int fork_depth_penalty __read_mostly = 1;

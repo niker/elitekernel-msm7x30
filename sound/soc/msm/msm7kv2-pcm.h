@@ -55,9 +55,9 @@
 				PLAYBACK_DMASZ
 /* 2048 frames (Mono), 1024 frames (Stereo) */
 #define CAPTURE_SIZE		4096
-#define MAX_BUFFER_CAPTURE_SIZE (6144*4)
+#define MAX_BUFFER_CAPTURE_SIZE (4096*4)
 #define MAX_PERIOD_SIZE         BUFSZ
-#define USE_PERIODS_MAX         1024
+#define USE_PERIODS_MAX         1536
 #define USE_PERIODS_MIN		1
 
 

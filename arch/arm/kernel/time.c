@@ -29,7 +29,6 @@
 
 #include <asm/leds.h>
 #include <asm/thread_info.h>
-#include <asm/sched_clock.h>
 #include <asm/stacktrace.h>
 #include <asm/mach/time.h>
 
@@ -162,8 +161,5 @@ device_initcall(timer_init_sysfs);
 void __init time_init(void)
 {
 	system_timer->init();
-#ifdef CONFIG_HAVE_SCHED_CLOCK
-	sched_clock_postinit();
-#endif
 }
 
